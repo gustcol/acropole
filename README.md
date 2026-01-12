@@ -53,49 +53,43 @@ The system ensures that Virtual Machines (VMs) deployed from a "Golden Image" re
 
 ## Architecture
 
-```
-                    +-------------------+
-                    |   Build Pipeline  |
-                    +-------------------+
-                            |
-            +---------------+---------------+
-            |               |               |
-            v               v               v
-    +--------------+  +-----------+  +-------------+
-    | Golden Image |->| Baseline  |->| Metadata    |
-    |    Build     |  | Collector |  | Service     |
-    +--------------+  +-----------+  +-------------+
-                                            |
-        +-----------------------------------+
-        |           |            |          |
-        v           v            v          v
-    +-------+  +--------+  +--------+  +----------+
-    | KVM   |  |Proxmox |  | Docker |  | Dashboard|
-    +-------+  +--------+  +--------+  +----------+
-        |           |            |
-        +-----------+------------+
-                    |
-            +-------v-------+
-            |  Deployed VM  |
-            +---------------+
-                    |
-            +-------v-------+
-            |   Integrity   |
-            |     Agent     |
-            +---------------+
-                    |
-        +-----------+-----------+
-        |                       |
-        v                       v
-+---------------+       +---------------+
-| File Monitor  |       | Violation     |
-| (fanotify)    |       | Detection     |
-+---------------+       +---------------+
-                               |
-                        +------v------+
-                        | Fail-Closed |
-                        |   Action    |
-                        +-------------+
+```mermaid
+flowchart TB
+    subgraph Build ["Build Pipeline"]
+        GoldenImage[Golden Image Build]
+        Collector[Baseline Collector]
+        Metadata[Metadata Service]
+    end
+
+    GoldenImage --> Collector --> Metadata
+
+    subgraph Deployment ["Deployment Options"]
+        KVM[KVM]
+        Proxmox[Proxmox]
+        Docker[Docker]
+        Dashboard[Dashboard]
+    end
+
+    Metadata --> KVM
+    Metadata --> Proxmox
+    Metadata --> Docker
+    Metadata --> Dashboard
+
+    subgraph Runtime ["Runtime Phase"]
+        VM[Deployed VM]
+        Agent[Integrity Agent]
+        Monitor[File Monitor<br>fanotify]
+        Detection[Violation Detection]
+        FailClosed[Fail-Closed Action]
+    end
+
+    KVM --> VM
+    Proxmox --> VM
+    Docker --> VM
+    VM --> Agent
+    Agent --> Monitor
+    Agent --> Detection
+    Detection --> FailClosed
 ```
 
 ### Data Flow
