@@ -14,12 +14,12 @@ flowchart LR
         AgentN[VM Agent N]
     end
 
-    subgraph Backend [Docker Container]
-        API[Metadata Service (Rust)]
-        KV[(Sled DB)]
+    subgraph Backend ["Docker Container"]
+        API["Metadata Service - Rust"]
+        KV[("Sled DB")]
     end
 
-    subgraph Frontend [Docker Container]
+    subgraph Frontend ["Docker Container"]
         React[React Dashboard]
         Nginx[Nginx Server]
     end
