@@ -1,0 +1,5 @@
+# Instance metadata for Proxmox cloud-init
+# This file provides basic instance information
+
+instance-id: acropole-vm-001
+local-hostname: acropole-vm

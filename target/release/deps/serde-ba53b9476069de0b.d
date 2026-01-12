@@ -1,0 +1,14 @@
+/Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/target/release/deps/serde-ba53b9476069de0b.d: /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/target/release/build/serde-3f544c450e54183d/out/private.rs
+
+/Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/target/release/deps/libserde-ba53b9476069de0b.rlib: /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/target/release/build/serde-3f544c450e54183d/out/private.rs
+
+/Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/target/release/deps/libserde-ba53b9476069de0b.rmeta: /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/target/release/build/serde-3f544c450e54183d/out/private.rs
+
+/Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/gustcol/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/target/release/build/serde-3f544c450e54183d/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/target/release/build/serde-3f544c450e54183d/out

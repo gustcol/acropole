@@ -1,0 +1,27 @@
+[package]
+name = "integrity-agent"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+integrity-common = { path = "../integrity-common" }
+walkdir = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+reqwest = { workspace = true }
+tokio = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+async-trait = "0.1"
+
+# Fanotify implementation will be platform-specific and added later
+# [target.'cfg(target_os = "linux")'.dependencies]
+# fanotify = "0.2"

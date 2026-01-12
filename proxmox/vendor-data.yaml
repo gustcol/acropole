@@ -1,0 +1,13 @@
+# Vendor data for Proxmox cloud-init
+# This file can be used for additional vendor-specific configuration
+
+# Example: Add custom repositories or perform additional setup
+# apt:
+#   sources:
+#     docker:
+#       source: deb [arch=amd64] https://download.docker.com/linux/ubuntu $RELEASE stable
+#       keyid: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+
+# Example: Run additional commands
+# runcmd:
+#   - echo "Vendor data applied successfully" >> /var/log/cloud-init-vendor.log

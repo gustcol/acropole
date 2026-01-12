@@ -1,0 +1,1 @@
+/Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/target/release/baseline-collector: /Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/baseline-collector/src/main.rs /Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/integrity-common/src/lib.rs
