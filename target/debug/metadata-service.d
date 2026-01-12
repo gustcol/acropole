@@ -1,0 +1,1 @@
+/Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/target/debug/metadata-service: /Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/integrity-common/src/lib.rs /Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/metadata-service/src/main.rs

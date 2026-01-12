@@ -1,0 +1,43 @@
+[Unit]
+Description=Acropole Golden Image Integrity Agent
+Documentation=https://github.com/your-repo/acropole
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/var/lib/acropole
+
+# Environment variables for the agent
+Environment="IMAGE_ID=ubuntu-v1"
+Environment="METADATA_URL=http://metadata-service:8080"
+
+# The agent binary and its arguments
+ExecStart=/usr/local/bin/integrity-agent \
+    --image-id ${IMAGE_ID} \
+    --metadata-url ${METADATA_URL} \
+    --mode monitor \
+    --watch-paths /bin,/sbin,/usr/bin,/usr/sbin,/etc
+
+# Restart policy
+Restart=on-failure
+RestartSec=10
+StartLimitInterval=60
+StartLimitBurst=3
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=integrity-agent
+
+# Security hardening (optional, can be commented out if causing issues)
+# NoNewPrivileges=true
+# PrivateTmp=true
+# ProtectSystem=strict
+# ProtectHome=true
+# ReadWritePaths=/var/lib/acropole /var/log
+
+[Install]
+WantedBy=multi-user.target

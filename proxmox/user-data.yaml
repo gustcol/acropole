@@ -1,0 +1,58 @@
+#cloud-config
+# Proxmox Cloud-Init Configuration for Acropole Integrity System
+# This file configures the VM for the Golden Image Integrity monitoring system
+
+# Set the hostname (will be overridden by Proxmox if set there)
+hostname: acropole-vm
+
+# Create a default user
+users:
+  - name: acropole
+    groups: sudo
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+      # Add your SSH public key here
+      # - ssh-rsa AAAAB3NzaC1yc2EA... user@host
+
+# Enable password authentication (set a strong password if needed)
+# chpasswd:
+#   list: |
+#     acropole:$6$rounds=4096$randomsalt$encryptedpassword
+#   expire: False
+
+# Update and upgrade packages
+package_update: true
+package_upgrade: true
+
+# Install required packages
+packages:
+- qemu-guest-agent
+- curl
+- wget
+- ca-certificates
+- gnupg
+- lsb-release
+
+# Enable and start QEMU guest agent
+runcmd:
+- systemctl enable qemu-guest-agent
+- systemctl start qemu-guest-agent
+- echo "QEMU Guest Agent enabled and started" > /var/log/cloud-init-qemu.log
+
+# Configure SSH
+ssh:
+  emit_keys_to_console: false
+  disable_root: true
+
+# Set timezone
+timezone: UTC
+
+# Final message
+final_message: "Acropole VM setup complete. Integrity agent can now be deployed."
+
+# Power state (optional - uncomment if you want to reboot after setup)
+# power_state:
+#   mode: reboot
+#   message: "Rebooting to complete setup"
+#   timeout: 30
