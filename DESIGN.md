@@ -53,23 +53,91 @@ pub struct Baseline {
     pub timestamp: String,  // ISO8601 creation time
     pub entries: Vec<FileIntegrityEntry>,
 }
+
+// Agent health status
+pub enum AgentHealth { Healthy, Warning, Critical }
+
+// Agent information for dashboard display
+pub struct AgentInfo {
+    pub id: String,
+    pub hostname: String,
+    pub ip_address: String,
+    pub status: AgentHealth,
+    pub last_heartbeat: Option<DateTime<Utc>>,
+    pub alert_count: u64,
+    pub image_id: String,
+}
+
+// Heartbeat sent periodically by agents
+pub struct Heartbeat {
+    pub agent_id: String,
+    pub timestamp: DateTime<Utc>,
+    pub status: AgentHealth,
+    pub image_id: String,
+}
+
+// Alert severity and alert data
+pub enum AlertSeverity { Info, Warning, Critical }
+
+pub struct Alert {
+    pub id: String,
+    pub agent_id: String,
+    pub message: String,
+    pub timestamp: DateTime<Utc>,
+    pub severity: AlertSeverity,
+}
+
+// Dashboard summary
+pub struct DashboardSummary {
+    pub total_agents: u64,
+    pub healthy_agents: u64,
+    pub warning_agents: u64,
+    pub critical_agents: u64,
+    pub alerts_today: u64,
+    pub alerts_this_week: u64,
+    pub alerts_this_month: u64,
+}
 ```
+
+All structs use `#[serde(rename_all = "camelCase")]` for JSON serialization to match the React frontend expectations.
 
 ## 4. API Specification (Metadata Service)
 
 **Base URL**: `http://metadata-service:8080`
 
-### Store Baseline
+### Baselines
 
-- **Endpoint**: `POST /baselines`
-- **Body**: JSON serialization of `Baseline` struct.
-- **Response**: `201 Created` or `400 Bad Request`.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/baselines` | Store new baseline. Body: `Baseline` JSON. Response: `201 Created`. |
+| GET | `/baselines` | List all baselines (returns image_id, timestamp, file count). |
+| GET | `/baselines/{image_id}` | Retrieve full baseline. `404` if not found. |
 
-### Retrieve Baseline
+### Agents
 
-- **Endpoint**: `GET /baselines/{image_id}`
-- **Response**: JSON serialization of `Baseline` struct.
-- **Errors**: `404 Not Found`.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/agents/register` | Register agent. Body: `RegisterAgent`. Response: `201` with `agent_id`. |
+| POST | `/agents/heartbeat` | Receive heartbeat. Body: `Heartbeat`. Updates agent status. |
+| POST | `/agents/alert` | Receive alert. Body: `PostAlert`. Creates alert, updates agent status. |
+| GET | `/agents` | List all registered agents. |
+| GET | `/agents/{id}` | Get single agent details. `404` if not found. |
+| GET | `/agents/{id}/heartbeats` | Get last 50 heartbeats for agent. |
+| GET | `/agents/{id}/alerts` | Get alerts for agent (most recent first). |
+
+### Dashboard
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/dashboard/summary` | Aggregated stats: agent counts by status, alert counts by time range. |
+
+### Storage Strategy
+
+The Metadata Service uses Sled with separate trees for data isolation:
+- **Default tree**: Baselines (keyed by `image_id`)
+- **`agents` tree**: Agent info (keyed by `agent_id`)
+- **`heartbeats` tree**: Heartbeat records (keyed by `{agent_id}:{timestamp_millis}`)
+- **`alerts` tree**: Alert records (keyed by `alert_id`)
 
 ## 5. Component Logic
 
@@ -89,14 +157,18 @@ pub struct Baseline {
 
 ### Integrity Agent
 
-- **Input**: Metadata Service URL, Image ID (via ENV var), Check Interval.
+- **Input**: Metadata Service URL, Image ID, Hostname, IP Address (via CLI args).
 - **Logic**:
-    1. Fetch Baseline for `Image ID`.
-    2. Walk local filesystem (same exclusions as Collector).
-    3. Compare current state vs Baseline.
-    4. **Anomalies**:
+    1. Register with Metadata Service (`POST /agents/register`), receive `agent_id`.
+    2. Fetch Baseline for `Image ID`.
+    3. Walk local filesystem (same exclusions as Collector).
+    4. Compare current state vs Baseline.
+    5. **Anomalies**:
         - **Modified**: Hash mismatch.
         - **Metadata Changed**: Mode/UID/GID mismatch.
         - **Added**: File exists locally but not in baseline.
         - **Deleted**: File in baseline but missing locally.
-    5. Log anomalies to Stdout/Syslog.
+    6. Report each anomaly as an alert (`POST /agents/alert`).
+    7. Send heartbeat with final status (`POST /agents/heartbeat`).
+    8. In monitor mode: background task sends heartbeats every 30 seconds.
+    9. Graceful degradation: if metadata service is unreachable, agent continues with local-only ID.

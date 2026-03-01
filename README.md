@@ -135,7 +135,16 @@ High-performance REST API for baseline storage and retrieval.
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/baselines` | Store new baseline |
+| GET | `/baselines` | List all baselines |
 | GET | `/baselines/{image_id}` | Retrieve baseline |
+| POST | `/agents/register` | Agent self-registration |
+| POST | `/agents/heartbeat` | Receive agent heartbeat |
+| POST | `/agents/alert` | Receive alert from agent |
+| GET | `/agents` | List all agents |
+| GET | `/agents/{id}` | Get agent details |
+| GET | `/agents/{id}/heartbeats` | Get agent heartbeat history |
+| GET | `/agents/{id}/alerts` | Get agent alerts |
+| GET | `/dashboard/summary` | Dashboard aggregate stats |
 
 **Usage:**
 ```bash
@@ -150,7 +159,9 @@ Agent that runs inside deployed VMs, verifying file integrity in real-time.
 - Real-time monitoring via fanotify (Linux)
 - Integrity verification against external baselines
 - Fail-closed actions on violations
-- Heartbeats to Metadata Service
+- Automatic registration with Metadata Service on startup
+- Periodic heartbeat reporting (every 30 seconds in monitor mode)
+- Alert reporting for each detected anomaly
 
 **Detected Anomaly Types:**
 - **Modified**: Hash differs from baseline
@@ -163,6 +174,8 @@ Agent that runs inside deployed VMs, verifying file integrity in real-time.
 ./integrity-agent \
   --image-id ubuntu-v1 \
   --mode monitor \
+  --hostname vm-web-01 \
+  --ip-address 192.168.1.10 \
   --watch-paths /bin,/sbin,/usr/bin,/etc \
   --metadata-url http://metadata-service:8080
 ```
@@ -172,10 +185,12 @@ Agent that runs inside deployed VMs, verifying file integrity in real-time.
 Modern web interface for real-time system monitoring.
 
 **Features:**
-- Agent status visualization
-- Integrity violation alerts
-- System health metrics
-- Charts and visual analytics
+- Agent status overview with health distribution pie chart
+- Integrity violation alerts with severity indicators
+- Dashboard summary cards (total, healthy, warning, critical agents)
+- Alert trend bar charts (today, this week, this month)
+- Agent detail view with heartbeat timeline and alert history
+- Baselines listing with search
 
 **Stack:**
 - React 18 with modern hooks
@@ -202,7 +217,8 @@ docker-compose up dashboard
 
 **Access:**
 - Dashboard: `http://localhost:3000`
-- API: `http://localhost:8080`
+- API (direct): `http://localhost:8080`
+- API (via dashboard proxy): `http://localhost:3000/api/`
 
 ### Proxmox VE
 
@@ -290,6 +306,8 @@ docker-compose logs -f
 ./target/release/integrity-agent \
   --image-id ubuntu-golden-v1 \
   --mode monitor \
+  --hostname vm-01 \
+  --ip-address 192.168.1.10 \
   --watch-paths /bin,/sbin,/usr/bin,/etc \
   --metadata-url http://localhost:8080
 ```
@@ -467,6 +485,9 @@ acropole/
 - `walkdir` - Filesystem traversal
 - `clap` - CLI parsing
 - `tracing` - Structured logging
+- `chrono` - Date/time handling
+- `uuid` - Unique ID generation
+- `reqwest` - HTTP client
 
 ---
 

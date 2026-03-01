@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -51,6 +51,9 @@ export const agentsAPI = {
 
   // Get dashboard summary
   getDashboardSummary: () => api.get('/dashboard/summary').then(res => res.data),
+
+  // Get all baselines
+  getBaselines: () => api.get('/baselines').then(res => res.data),
 };
 
 export default api;

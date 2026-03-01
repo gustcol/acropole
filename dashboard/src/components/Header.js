@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
-import { Dashboard as DashboardIcon, Storage as StorageIcon } from '@mui/icons-material';
+import { Dashboard as DashboardIcon, Storage as StorageIcon, Inventory as InventoryIcon } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 function Header() {
@@ -33,6 +33,15 @@ function Header() {
             variant={isActive('/agents') ? 'outlined' : 'text'}
           >
             Agents
+          </Button>
+
+          <Button
+            color="inherit"
+            startIcon={<InventoryIcon />}
+            onClick={() => navigate('/baselines')}
+            variant={isActive('/baselines') ? 'outlined' : 'text'}
+          >
+            Baselines
           </Button>
         </Box>
       </Toolbar>

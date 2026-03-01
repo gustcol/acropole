@@ -20,6 +20,7 @@ clap = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 chrono = { workspace = true }
+uuid = { workspace = true }
 async-trait = "0.1"
 
 # Fanotify implementation will be platform-specific and added later

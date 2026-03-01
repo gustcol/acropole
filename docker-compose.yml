@@ -26,8 +26,6 @@ services:
       - metadata-service
     networks:
       - integrity_network
-    environment:
-      - REACT_APP_API_URL=http://localhost:8080
 
 networks:
   integrity_network:
