@@ -5,7 +5,6 @@ set -euo pipefail
 # This script safely updates a VM and re-baselines it for the integrity system.
 # It must be run as root.
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVICE_NAME="integrity-agent"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 
@@ -165,7 +164,7 @@ verify_service() {
 
     # Check recent logs for errors
     local error_count
-    error_count=$(journalctl -u "$SERVICE_NAME" --since "1 minute ago" --no-pager -q | grep -i error | wc -l)
+    error_count=$(journalctl -u "$SERVICE_NAME" --since "1 minute ago" --no-pager -q | grep -ci error)
 
     if [[ $error_count -gt 0 ]]; then
         log_warn "Found $error_count error(s) in recent logs"

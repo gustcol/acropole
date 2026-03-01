@@ -1,4 +1,3 @@
-use chrono;
 use clap::Parser;
 use integrity_common::{Baseline, FileIntegrityEntry, Result, IntegrityError};
 use sha2::{Digest, Sha512};
@@ -32,8 +31,7 @@ fn should_exclude(entry: &DirEntry) -> bool {
 
     // Skip if it's a directory and matches excluded paths
     if path.is_dir() {
-        let path_str = path.to_string_lossy();
-        return EXCLUDED_DIRS.iter().any(|&excluded| path_str.starts_with(excluded));
+        return EXCLUDED_DIRS.iter().any(|&excluded| path.starts_with(excluded));
     }
 
     // Skip special files (devices, sockets, etc.)

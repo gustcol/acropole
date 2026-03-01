@@ -136,7 +136,6 @@ High-performance REST API for baseline storage and retrieval.
 |--------|----------|-------------|
 | POST | `/baselines` | Store new baseline |
 | GET | `/baselines/{image_id}` | Retrieve baseline |
-| GET | `/health` | Health check |
 
 **Usage:**
 ```bash
@@ -311,16 +310,16 @@ sudo systemctl start integrity-agent
 
 ### Advanced Configuration
 
-Create `/etc/integrity-agent.toml`:
+The integrity agent is configured via CLI arguments and environment variables.
+For systemd-managed deployments, configuration is set in the service file at
+`/etc/systemd/system/integrity-agent.service` via `Environment` directives:
 
-```toml
-image_id = "ubuntu-v1"
-mode = "monitor"
-watch_paths = ["/bin", "/sbin", "/usr/bin", "/etc", "/opt/myapp"]
-exclude_patterns = ["*.log", "/tmp/*", "/var/cache/*"]
-max_consecutive_anomalies = 5
-metadata_url = "http://metadata-service:8080"
+```ini
+Environment="IMAGE_ID=ubuntu-v1"
+Environment="METADATA_URL=http://metadata-service:8080"
 ```
+
+See `deployment/integrity-agent.service` for the full reference.
 
 ---
 
@@ -382,6 +381,7 @@ sudo systemctl start integrity-agent
 - **Cryptographic Hashing**: SHA-512 for tamper detection
 - **Fail-Closed Design**: Automatic response to violations
 - **Audit Trail**: Complete logging of all integrity events
+- **Systemd Hardening**: NoNewPrivileges, PrivateTmp, ProtectSystem, ProtectHome enabled
 - **mTLS**: Secure communication between components (planned)
 
 ---

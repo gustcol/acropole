@@ -41,7 +41,7 @@ We will use a shared Rust library (`integrity-common`) to ensure consistency.
 // Represents a single file's integrity data
 pub struct FileIntegrityEntry {
     pub path: String,       // Relative to root, e.g., "/etc/passwd"
-    pub sha256: String,     // Hex encoded hash
+    pub sha512: String,     // Hex encoded SHA-512 hash
     pub mode: u32,          // Unix permissions (e.g., 0o644)
     pub uid: u32,           // User ID
     pub gid: u32,           // Group ID

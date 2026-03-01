@@ -18,6 +18,26 @@ import {
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { agentsAPI } from '../services/api';
 
+const StatCard = ({ title, value, icon, color }) => (
+  <Card>
+    <CardContent>
+      <Box display="flex" alignItems="center" justifyContent="space-between">
+        <Box>
+          <Typography color="textSecondary" gutterBottom variant="h6">
+            {title}
+          </Typography>
+          <Typography variant="h3">
+            {value}
+          </Typography>
+        </Box>
+        <Box color={color}>
+          {icon}
+        </Box>
+      </Box>
+    </CardContent>
+  </Card>
+);
+
 function Dashboard() {
   const { data: summary, isLoading, error } = useQuery({
     queryKey: ['dashboardSummary'],
@@ -51,26 +71,6 @@ function Dashboard() {
     { name: 'This Week', alerts: summary?.alertsThisWeek || 0 },
     { name: 'This Month', alerts: summary?.alertsThisMonth || 0 },
   ];
-
-  const StatCard = ({ title, value, icon, color }) => (
-    <Card>
-      <CardContent>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box>
-            <Typography color="textSecondary" gutterBottom variant="h6">
-              {title}
-            </Typography>
-            <Typography variant="h3">
-              {value}
-            </Typography>
-          </Box>
-          <Box color={color}>
-            {icon}
-          </Box>
-        </Box>
-      </CardContent>
-    </Card>
-  );
 
   return (
     <Box>
