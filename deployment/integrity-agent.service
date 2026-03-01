@@ -32,12 +32,12 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=integrity-agent
 
-# Security hardening (optional, can be commented out if causing issues)
-# NoNewPrivileges=true
-# PrivateTmp=true
-# ProtectSystem=strict
-# ProtectHome=true
-# ReadWritePaths=/var/lib/acropole /var/log
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/acropole /var/log
 
 [Install]
 WantedBy=multi-user.target

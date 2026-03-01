@@ -6,15 +6,17 @@ use tokio::sync::mpsc;
 #[derive(Debug, Clone)]
 pub struct FileEvent {
     pub path: PathBuf,
+    #[allow(dead_code)]
     pub event_type: EventType,
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum EventType {
     Modified,
     Created,
     Deleted,
-    Accessed, // For execution events
+    Accessed,
 }
 
 /// Trait for file system monitors.
@@ -46,7 +48,7 @@ impl Monitor for MockMonitor {
         let interval = self.interval_secs;
 
         tokio::spawn(async move {
-            let test_paths = vec![
+            let test_paths = [
                 PathBuf::from("/etc/passwd"),
                 PathBuf::from("/bin/ls"),
                 PathBuf::from("/usr/bin/python3"),

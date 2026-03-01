@@ -35,16 +35,16 @@ async fn store_baseline(
     info!("Storing baseline for image: {}", image_id);
 
     let serialized = serde_json::to_vec(&baseline)
-        .map_err(|e| actix_web::error::ErrorInternalServerError(e))?;
+        .map_err(actix_web::error::ErrorInternalServerError)?;
 
     data.db
         .insert(image_id.as_bytes(), serialized)
-        .map_err(|e| actix_web::error::ErrorInternalServerError(e))?;
+        .map_err(actix_web::error::ErrorInternalServerError)?;
 
     data.db
         .flush_async()
         .await
-        .map_err(|e| actix_web::error::ErrorInternalServerError(e))?;
+        .map_err(actix_web::error::ErrorInternalServerError)?;
 
     Ok(HttpResponse::Created().json(baseline))
 }
@@ -59,11 +59,11 @@ async fn get_baseline(
 
     let serialized = data.db
         .get(image_id.as_bytes())
-        .map_err(|e| actix_web::error::ErrorInternalServerError(e))?
+        .map_err(actix_web::error::ErrorInternalServerError)?
         .ok_or_else(|| actix_web::error::ErrorNotFound(format!("Baseline not found: {}", image_id)))?;
 
     let baseline: Baseline = serde_json::from_slice(&serialized)
-        .map_err(|e| actix_web::error::ErrorInternalServerError(e))?;
+        .map_err(actix_web::error::ErrorInternalServerError)?;
 
     Ok(HttpResponse::Ok().json(baseline))
 }

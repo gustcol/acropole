@@ -9,7 +9,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchInterval: 30000, // Refetch every 30 seconds
-      staleTime: 60000, // Consider data stale after 1 minute
+      staleTime: 25000, // Consider data stale before next refetch
     },
   },
 });

@@ -51,8 +51,7 @@ fn should_exclude(entry: &DirEntry) -> bool {
 
     // Skip if it's a directory and matches excluded paths
     if path.is_dir() {
-        let path_str = path.to_string_lossy();
-        return EXCLUDED_DIRS.iter().any(|&excluded| path_str.starts_with(excluded));
+        return EXCLUDED_DIRS.iter().any(|&excluded| path.starts_with(excluded));
     }
 
     // Skip special files (devices, sockets, etc.)
@@ -179,8 +178,8 @@ fn compare_filesystems(baseline: &Baseline, current: &HashMap<String, FileIntegr
                         path, baseline_entry.sha512, current_entry.sha512));
                 }
                 if current_entry.mode != baseline_entry.mode {
-                    anomalies.push(format!("PERMISSION_CHANGED: {} ({} != {})",
-                        path, format!("{:o}", baseline_entry.mode), format!("{:o}", current_entry.mode)));
+                    anomalies.push(format!("PERMISSION_CHANGED: {} ({:o} != {:o})",
+                        path, baseline_entry.mode, current_entry.mode));
                 }
                 if current_entry.uid != baseline_entry.uid {
                     anomalies.push(format!("UID_CHANGED: {} ({} != {})",
@@ -199,7 +198,7 @@ fn compare_filesystems(baseline: &Baseline, current: &HashMap<String, FileIntegr
     }
 
     // Check for added files
-    for (path, _) in current {
+    for path in current.keys() {
         if !baseline_map.contains_key(path) {
             anomalies.push(format!("ADDED: {}", path));
         }
@@ -218,8 +217,8 @@ async fn verify_file(path: &Path, baseline_map: &HashMap<String, &FileIntegrityE
                 Ok(metadata) => {
                     // Check permissions
                     if metadata.mode() & 0o7777 != baseline_entry.mode {
-                        return Some(format!("PERMISSION_CHANGED: {} ({} != {})",
-                            relative_path, format!("{:o}", baseline_entry.mode), format!("{:o}", metadata.mode() & 0o7777)));
+                        return Some(format!("PERMISSION_CHANGED: {} ({:o} != {:o})",
+                            relative_path, baseline_entry.mode, metadata.mode() & 0o7777));
                     }
                     if metadata.uid() != baseline_entry.uid {
                         return Some(format!("UID_CHANGED: {} ({} != {})",

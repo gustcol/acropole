@@ -58,6 +58,14 @@ function AgentDetail() {
     );
   }
 
+  if (!agent) {
+    return (
+      <Alert severity="warning">
+        Agent data unavailable.
+      </Alert>
+    );
+  }
+
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'healthy':
@@ -197,31 +205,36 @@ function AgentDetail() {
                   <CircularProgress />
                 </Box>
               ) : alerts && alerts.length > 0 ? (
-                <List>
-                  {alerts.slice(0, 10).map((alert, index) => (
-                    <React.Fragment key={alert.id}>
-                      <ListItem>
-                        <ListItemText
-                          primary={alert.message}
-                          secondary={
-                            <Box>
-                              <Typography variant="body2" color="textSecondary">
-                                {new Date(alert.timestamp).toLocaleString()}
-                              </Typography>
-                              <Chip
-                                label={alert.severity}
-                                color={alert.severity === 'critical' ? 'error' : alert.severity === 'warning' ? 'warning' : 'info'}
-                                size="small"
-                                sx={{ mt: 1 }}
-                              />
-                            </Box>
-                          }
-                        />
-                      </ListItem>
-                      {index < alerts.slice(0, 10).length - 1 && <Divider />}
-                    </React.Fragment>
-                  ))}
-                </List>
+                (() => {
+                  const recentAlerts = alerts.slice(0, 10);
+                  return (
+                    <List>
+                      {recentAlerts.map((alert, index) => (
+                        <React.Fragment key={alert.id}>
+                          <ListItem>
+                            <ListItemText
+                              primary={alert.message}
+                              secondary={
+                                <Box>
+                                  <Typography variant="body2" color="textSecondary">
+                                    {new Date(alert.timestamp).toLocaleString()}
+                                  </Typography>
+                                  <Chip
+                                    label={alert.severity}
+                                    color={alert.severity === 'critical' ? 'error' : alert.severity === 'warning' ? 'warning' : 'info'}
+                                    size="small"
+                                    sx={{ mt: 1 }}
+                                  />
+                                </Box>
+                              }
+                            />
+                          </ListItem>
+                          {index < recentAlerts.length - 1 && <Divider />}
+                        </React.Fragment>
+                      ))}
+                    </List>
+                  );
+                })()
               ) : (
                 <Typography color="textSecondary">
                   No recent alerts for this agent.
