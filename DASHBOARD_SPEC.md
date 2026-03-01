@@ -66,32 +66,44 @@ flowchart LR
 - **Violation History**: A list of all integrity violations reported by this specific agent.
 - **Baseline Diff**: A visual representation of modified/added/deleted files compared to the golden image.
 
-## 5. API Requirements (Metadata Service Extension)
+## 5. API Endpoints (Implemented)
 
-To support the dashboard, the `metadata-service` needs the following new endpoints:
+The following endpoints support the dashboard and agent reporting pipeline:
 
-- `POST /agents/heartbeat`: Receives heartbeat JSON from agents.
-- `POST /agents/alert`: Receives violation alerts.
-- `GET /agents`: Returns a list of all registered agents and their latest status.
-- `GET /agents/{id}`: Returns details for a specific agent.
-- `GET /alerts`: Returns a paginated list of alerts (global or per agent).
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/agents/register` | Agent self-registration (returns `agent_id`) |
+| POST | `/agents/heartbeat` | Receive heartbeat, update agent status |
+| POST | `/agents/alert` | Receive alert, increment alert count, escalate status |
+| GET | `/agents` | List all registered agents |
+| GET | `/agents/{id}` | Get single agent details |
+| GET | `/agents/{id}/heartbeats` | Last 50 heartbeats for agent |
+| GET | `/agents/{id}/alerts` | Alerts for agent (most recent first) |
+| GET | `/dashboard/summary` | Aggregate stats (agent counts, alert counts by period) |
+| GET | `/baselines` | List all stored baselines |
 
-## 6. Implementation Plan
+All JSON responses use camelCase field naming to match the React frontend.
 
-### Phase 1: Backend Extension
+## 6. Implementation Status
 
-1. Update `integrity-common` with `Heartbeat` and `Alert` structs.
-2. Update `metadata-service` to store agent state in Sled (e.g., using a separate tree `agents`).
-3. Implement REST endpoints for the dashboard.
+### Phase 1: Backend Extension — Done
 
-### Phase 2: Frontend Development
+- `integrity-common` extended with `AgentInfo`, `Heartbeat`, `Alert`, `DashboardSummary`, and related types.
+- `metadata-service` uses separate Sled trees (`agents`, `heartbeats`, `alerts`) for data isolation.
+- All 9 new REST endpoints implemented.
+- Alert escalation logic: Critical alerts set agent to Critical; Warning alerts promote Healthy to Warning.
 
-1. Initialize React project with TypeScript.
-2. Implement API client service.
-3. Build "Dashboard" and "Agent List" components.
-4. Integrate auto-refresh (polling) for real-time updates.
+### Phase 2: Frontend Development — Done
 
-### Phase 3: Dockerization
+- React app with Material UI, React Query, and Recharts.
+- Dashboard home with summary cards, status pie chart, and alert bar chart.
+- Agent list with search/filter functionality.
+- Agent detail view with heartbeat timeline chart and alert history.
+- Baselines listing page with search.
+- API client configured to use `/api` prefix (proxied by Nginx in production).
 
-1. Create `Dockerfile` for the React app (build -> serve with Nginx).
-2. Create `docker-compose.yml` to orchestrate `metadata-service` and `dashboard`.
+### Phase 3: Dockerization — Done
+
+- Nginx serves React build and proxies `/api/*` requests to `metadata-service:8080`.
+- `docker-compose.yml` orchestrates both services on a shared network.
+- No CORS issues: all API calls go through the same origin via Nginx reverse proxy.

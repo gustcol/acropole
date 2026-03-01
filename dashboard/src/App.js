@@ -5,6 +5,7 @@ import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import AgentList from './components/AgentList';
 import AgentDetail from './components/AgentDetail';
+import BaselineList from './components/BaselineList';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/agents" element={<AgentList />} />
           <Route path="/agents/:id" element={<AgentDetail />} />
+          <Route path="/baselines" element={<BaselineList />} />
         </Routes>
       </Container>
     </Router>

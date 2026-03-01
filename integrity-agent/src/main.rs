@@ -3,7 +3,11 @@ mod monitor;
 mod fanotify_monitor;
 
 use clap::Parser;
-use integrity_common::{Baseline, FileIntegrityEntry, Result, IntegrityError};
+use chrono::Utc;
+use integrity_common::{
+    Baseline, FileIntegrityEntry, Result, IntegrityError,
+    RegisterAgent, RegisterAgentResponse, Heartbeat, AgentHealth, PostAlert, AlertSeverity,
+};
 use monitor::Monitor;
 use sha2::{Digest, Sha512};
 use std::collections::HashMap;
@@ -31,6 +35,12 @@ struct Args {
 
     #[arg(long, value_delimiter = ',', default_value = "/bin,/sbin,/usr/bin,/usr/sbin,/etc")]
     watch_paths: Vec<PathBuf>,
+
+    #[arg(long, default_value = "unknown")]
+    hostname: String,
+
+    #[arg(long, default_value = "0.0.0.0")]
+    ip_address: String,
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]
@@ -135,8 +145,14 @@ fn scan_filesystem(root_path: &Path) -> Result<HashMap<String, FileIntegrityEntr
     Ok(entries)
 }
 
-async fn fetch_baseline(metadata_url: &str, image_id: &str) -> Result<Baseline> {
-    let client = reqwest::Client::new();
+fn create_http_client() -> reqwest::Client {
+    reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .expect("Failed to create HTTP client")
+}
+
+async fn fetch_baseline(client: &reqwest::Client, metadata_url: &str, image_id: &str) -> Result<Baseline> {
     let url = format!("{}/baselines/{}", metadata_url, image_id);
 
     info!("Fetching baseline from: {}", url);
@@ -145,20 +161,104 @@ async fn fetch_baseline(metadata_url: &str, image_id: &str) -> Result<Baseline> 
         .get(&url)
         .send()
         .await
-        .map_err(|e| integrity_common::IntegrityError::Storage(e.to_string()))?;
+        .map_err(|e| IntegrityError::Storage(e.to_string()))?;
 
     if response.status().is_success() {
         let baseline: Baseline = response
             .json()
             .await
-            .map_err(|e| integrity_common::IntegrityError::Storage(e.to_string()))?;
+            .map_err(|e| IntegrityError::Storage(e.to_string()))?;
         info!("Baseline fetched successfully ({} files)", baseline.entries.len());
         Ok(baseline)
     } else {
         let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
         error!("Failed to fetch baseline: {}", error_text);
-        Err(integrity_common::IntegrityError::BaselineNotFound(format!("Fetch failed: {}", error_text)))
+        Err(IntegrityError::BaselineNotFound(format!("Fetch failed: {}", error_text)))
     }
+}
+
+async fn register_agent(
+    client: &reqwest::Client,
+    metadata_url: &str,
+    hostname: &str,
+    ip_address: &str,
+    image_id: &str,
+) -> Result<String> {
+    let url = format!("{}/agents/register", metadata_url);
+    let body = RegisterAgent {
+        hostname: hostname.to_string(),
+        ip_address: ip_address.to_string(),
+        image_id: image_id.to_string(),
+    };
+
+    let response = client.post(&url).json(&body).send().await
+        .map_err(|e| IntegrityError::Storage(e.to_string()))?;
+
+    if response.status().is_success() {
+        let resp: RegisterAgentResponse = response.json().await
+            .map_err(|e| IntegrityError::Storage(e.to_string()))?;
+        info!("Registered as agent: {}", resp.agent_id);
+        Ok(resp.agent_id)
+    } else {
+        let error_text = response.text().await.unwrap_or_default();
+        Err(IntegrityError::Storage(format!("Registration failed: {}", error_text)))
+    }
+}
+
+async fn send_heartbeat(
+    client: &reqwest::Client,
+    metadata_url: &str,
+    agent_id: &str,
+    status: AgentHealth,
+    image_id: &str,
+) -> Result<()> {
+    let url = format!("{}/agents/heartbeat", metadata_url);
+    let heartbeat = Heartbeat {
+        agent_id: agent_id.to_string(),
+        timestamp: Utc::now(),
+        status,
+        image_id: image_id.to_string(),
+    };
+
+    client.post(&url).json(&heartbeat).send().await
+        .map_err(|e| IntegrityError::Storage(e.to_string()))?;
+    Ok(())
+}
+
+async fn send_alert(
+    client: &reqwest::Client,
+    metadata_url: &str,
+    agent_id: &str,
+    message: &str,
+    severity: AlertSeverity,
+) -> Result<()> {
+    let url = format!("{}/agents/alert", metadata_url);
+    let alert = PostAlert {
+        agent_id: agent_id.to_string(),
+        message: message.to_string(),
+        severity,
+    };
+
+    client.post(&url).json(&alert).send().await
+        .map_err(|e| IntegrityError::Storage(e.to_string()))?;
+    Ok(())
+}
+
+fn spawn_heartbeat_task(
+    client: reqwest::Client,
+    metadata_url: String,
+    agent_id: String,
+    image_id: String,
+) -> tokio::task::JoinHandle<()> {
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(30));
+        loop {
+            interval.tick().await;
+            if let Err(e) = send_heartbeat(&client, &metadata_url, &agent_id, AgentHealth::Healthy, &image_id).await {
+                warn!("Failed to send heartbeat: {}", e);
+            }
+        }
+    })
 }
 
 fn compare_filesystems(baseline: &Baseline, current: &HashMap<String, FileIntegrityEntry>) -> Vec<String> {
@@ -258,6 +358,8 @@ async fn verify_file(path: &Path, baseline_map: &HashMap<String, &FileIntegrityE
 async fn run_monitor_mode(
     args: &Args,
     baseline: &Baseline,
+    client: &reqwest::Client,
+    agent_id: &str,
 ) -> Result<()> {
     info!("Starting integrity agent in MONITOR mode");
     info!("Watch paths: {:?}", args.watch_paths);
@@ -266,6 +368,14 @@ async fn run_monitor_mode(
         .iter()
         .map(|entry| (entry.path.clone(), entry))
         .collect();
+
+    // Start background heartbeat task
+    let heartbeat_handle = spawn_heartbeat_task(
+        client.clone(),
+        args.metadata_url.clone(),
+        agent_id.to_string(),
+        args.image_id.clone(),
+    );
 
     // Create monitor based on OS
     #[cfg(target_os = "linux")]
@@ -294,8 +404,13 @@ async fn run_monitor_mode(
             warn!("ANOMALY DETECTED: {}", anomaly);
             consecutive_anomalies += 1;
 
+            if let Err(e) = send_alert(client, &args.metadata_url, agent_id, &anomaly, AlertSeverity::Critical).await {
+                warn!("Failed to send alert: {}", e);
+            }
+
             if consecutive_anomalies >= MAX_CONSECUTIVE_ANOMALIES {
                 error!("Too many consecutive anomalies detected ({}). Triggering fail-closed.", consecutive_anomalies);
+                heartbeat_handle.abort();
                 // In a real implementation, this would trigger emergency mode or shutdown
                 // For now, we just exit with an error
                 std::process::exit(1);
@@ -306,6 +421,7 @@ async fn run_monitor_mode(
     }
 
     info!("Monitor event channel closed");
+    heartbeat_handle.abort();
     monitor.stop().await.map_err(|e| {
         IntegrityError::Storage(format!("Failed to stop monitor: {}", e))
     })?;
@@ -327,14 +443,25 @@ async fn main() -> Result<()> {
     // Validate scan path exists
     if !args.scan_path.exists() {
         error!("Scan path does not exist: {:?}", args.scan_path);
-        return Err(integrity_common::IntegrityError::Io(std::io::Error::new(
+        return Err(IntegrityError::Io(std::io::Error::new(
             std::io::ErrorKind::NotFound,
             "Scan path does not exist",
         )));
     }
 
+    let client = create_http_client();
+
+    // Register with metadata service; fall back to random ID if registration fails
+    let agent_id = match register_agent(&client, &args.metadata_url, &args.hostname, &args.ip_address, &args.image_id).await {
+        Ok(id) => id,
+        Err(e) => {
+            warn!("Failed to register agent (continuing anyway): {}", e);
+            uuid::Uuid::new_v4().to_string()
+        }
+    };
+
     // Fetch baseline from metadata service
-    let baseline = fetch_baseline(&args.metadata_url, &args.image_id).await?;
+    let baseline = fetch_baseline(&client, &args.metadata_url, &args.image_id).await?;
 
     match args.mode {
         RunMode::Scan => {
@@ -347,10 +474,24 @@ async fn main() -> Result<()> {
 
             if anomalies.is_empty() {
                 info!("No anomalies detected. System integrity verified.");
+                if let Err(e) = send_heartbeat(&client, &args.metadata_url, &agent_id, AgentHealth::Healthy, &args.image_id).await {
+                    warn!("Failed to send heartbeat: {}", e);
+                }
             } else {
                 warn!("Integrity check failed! Found {} anomalies:", anomalies.len());
                 for anomaly in &anomalies {
                     warn!("  {}", anomaly);
+                    let severity = if anomaly.starts_with("MODIFIED:") || anomaly.starts_with("DELETED:") {
+                        AlertSeverity::Critical
+                    } else {
+                        AlertSeverity::Warning
+                    };
+                    if let Err(e) = send_alert(&client, &args.metadata_url, &agent_id, anomaly, severity).await {
+                        warn!("Failed to send alert: {}", e);
+                    }
+                }
+                if let Err(e) = send_heartbeat(&client, &args.metadata_url, &agent_id, AgentHealth::Critical, &args.image_id).await {
+                    warn!("Failed to send heartbeat: {}", e);
                 }
 
                 // Exit with error code if anomalies found
@@ -358,7 +499,7 @@ async fn main() -> Result<()> {
             }
         }
         RunMode::Monitor => {
-            run_monitor_mode(&args, &baseline).await?;
+            run_monitor_mode(&args, &baseline, &client, &agent_id).await?;
         }
     }
 

@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -65,6 +66,96 @@ impl fmt::Display for Baseline {
             self.entries.len()
         )
     }
+}
+
+/// Health status of an agent
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum AgentHealth {
+    Healthy,
+    Warning,
+    Critical,
+}
+
+/// Agent information for dashboard display
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentInfo {
+    pub id: String,
+    pub hostname: String,
+    pub ip_address: String,
+    pub status: AgentHealth,
+    pub last_heartbeat: Option<DateTime<Utc>>,
+    pub alert_count: u64,
+    pub image_id: String,
+}
+
+/// Heartbeat sent by agents periodically
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Heartbeat {
+    pub agent_id: String,
+    pub timestamp: DateTime<Utc>,
+    pub status: AgentHealth,
+    pub image_id: String,
+}
+
+/// Alert severity levels
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum AlertSeverity {
+    Info,
+    Warning,
+    Critical,
+}
+
+/// Alert generated when anomalies are detected
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Alert {
+    pub id: String,
+    pub agent_id: String,
+    pub message: String,
+    pub timestamp: DateTime<Utc>,
+    pub severity: AlertSeverity,
+}
+
+/// Dashboard summary statistics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DashboardSummary {
+    pub total_agents: u64,
+    pub healthy_agents: u64,
+    pub warning_agents: u64,
+    pub critical_agents: u64,
+    pub alerts_today: u64,
+    pub alerts_this_week: u64,
+    pub alerts_this_month: u64,
+}
+
+/// Request body for agent self-registration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RegisterAgent {
+    pub hostname: String,
+    pub ip_address: String,
+    pub image_id: String,
+}
+
+/// Registration response with assigned agent_id
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RegisterAgentResponse {
+    pub agent_id: String,
+}
+
+/// Request body for posting alerts
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostAlert {
+    pub agent_id: String,
+    pub message: String,
+    pub severity: AlertSeverity,
 }
 
 #[cfg(test)]
