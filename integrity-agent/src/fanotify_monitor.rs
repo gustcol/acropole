@@ -1,4 +1,4 @@
-use crate::monitor::{EventType, FileEvent, Monitor};
+use crate::monitor::{FileEvent, Monitor};
 use async_trait::async_trait;
 use std::path::PathBuf;
 use tokio::sync::mpsc;
@@ -25,7 +25,7 @@ impl Monitor for FanotifyMonitor {
         tracing::warn!("Fanotify monitoring is not implemented. Falling back to MockMonitor behavior.");
 
         // For now, fall back to a simple mock that generates events periodically
-        let mock_monitor = crate::monitor::MockMonitor::new(10); // 10 second interval
+        let mut mock_monitor = crate::monitor::MockMonitor::new(10); // 10 second interval
         mock_monitor.start().await
     }
 

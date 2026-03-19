@@ -1,0 +1,28 @@
+# Build artifacts
+/target/
+
+# Database files
+metadata-db/
+test-db/
+
+# Node modules
+node_modules/
+dashboard/node_modules/
+dashboard/build/
+
+# Environment files
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local tool config
+.claude/

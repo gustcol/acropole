@@ -1,1 +1,0 @@
-/Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/target/debug/integrity-agent: /Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/integrity-agent/src/main.rs /Users/gustcol/Pessoal/myenv/devops/caosbr_daileon/acropole/integrity-common/src/lib.rs

@@ -1,5 +1,5 @@
 # Build stage
-FROM rust:1.75-alpine AS builder
+FROM rust:1.94-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache musl-dev
@@ -8,13 +8,18 @@ RUN apk add --no-cache musl-dev
 WORKDIR /app
 
 # Copy workspace files
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
 COPY integrity-common ./integrity-common
 COPY metadata-service ./metadata-service
 
+# Create stub directories for other workspace members so Cargo resolves the workspace
+RUN mkdir -p baseline-collector/src && echo "fn main() {}" > baseline-collector/src/main.rs
+COPY baseline-collector/Cargo.toml ./baseline-collector/Cargo.toml
+RUN mkdir -p integrity-agent/src && echo "fn main() {}" > integrity-agent/src/main.rs
+COPY integrity-agent/Cargo.toml ./integrity-agent/Cargo.toml
+
 # Build the metadata service
-RUN cd metadata-service && \
-    cargo build --release --bin metadata-service
+RUN cargo build --release --bin metadata-service
 
 # Runtime stage
 FROM alpine:3.19
